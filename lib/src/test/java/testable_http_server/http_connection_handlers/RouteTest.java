@@ -1,19 +1,21 @@
-package testable_http_server;
+package testable_http_server.http_connection_handlers;
 
 import org.junit.jupiter.api.Test;
+import testable_http_server.TestRequest;
+import testable_http_server.TestableHttpServer;
 
 import java.io.IOException;
 
 import static handlers.TextHandler.text;
 import static org.assertj.core.api.Assertions.assertThat;
-import static testable_http_server.RouteHttpConnectionHandler.router;
+import static testable_http_server.http_connection_handlers.Router.router;
 
-public class RouteHttpConnectionHandlerTest {
+public class RouteTest {
 
     @Test
     void returns_404_for_empty_route() throws IOException {
         final var httpServer = TestableHttpServer.empty()
-                .withHandler(RouteHttpConnectionHandler.empty())
+                .withHandler(Router.empty())
                 .startTestHttpServer();
         final var result = httpServer.send(TestRequest.empty().method("POST").path("test").plainTextBody("10"));
         assertThat(result.status).isEqualTo(404);

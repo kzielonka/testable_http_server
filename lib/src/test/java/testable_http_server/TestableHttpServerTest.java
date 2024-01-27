@@ -1,11 +1,12 @@
 package testable_http_server;
 
 import org.junit.jupiter.api.Test;
+import testable_http_server.http_connection_handlers.Router;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static testable_http_server.RouteHttpConnectionHandler.router;
+import static testable_http_server.http_connection_handlers.Router.router;
 
 public class TestableHttpServerTest {
     static class SampleHandler implements HttpConnectionHandler {
@@ -60,7 +61,6 @@ public class TestableHttpServerTest {
 
         public void handleWithContext(Request request, Authorized.CurrentUser currentUser) throws IOException {
             final var plainTextRequest = new PlainTextRequest(request);
-            // final var currentUser = request.attribute(Authorized.CurrentUser.class);
             final var body = text + " " + plainTextRequest.body() + " " + currentUser.name + "\n";
             final var content = new PlainTextContent(body);
             request.startResponse().code(200).send(content);
@@ -81,38 +81,34 @@ public class TestableHttpServerTest {
 
         final var request1 = TestRequest.empty().method("POST").path("test").plainTextBody("10");
         final var result1 = httpServer.send(request1);
-        assertThat(result1.contentType()).isEqualTo("plain/text");
         assertThat(result1.status).isEqualTo(200);
+        assertThat(result1.contentType()).isEqualTo("text/plain;charset=UTF-8");
         assertThat(result1.body).isEqualTo("OK1 10\n");
-        assertThat(result1.headers.contentType()).isEqualTo("text/plain; charset=UTF-8");
 
         final var request2 = TestRequest.empty().method("POST").path("test2").plainTextBody("20");
         final var result2 = httpServer.send(request2);
-        assertThat(result2.contentType()).isEqualTo("plain/text");
         assertThat(result2.status).isEqualTo(200);
+        assertThat(result2.contentType()).isEqualTo("text/plain;charset=UTF-8");
         assertThat(result2.body).isEqualTo("OK2 20\n");
-        assertThat(result1.headers.contentType()).isEqualTo("text/plain; charset=UTF-8");
 
         final var request3 = TestRequest.empty().method("GET").path("test").plainTextBody("30");
         final var result3 = httpServer.send(request3);
-        assertThat(result3.contentType()).isEqualTo("plain/text");
         assertThat(result3.status).isEqualTo(200);
+        assertThat(result3.contentType()).isEqualTo("text/plain;charset=UTF-8");
         assertThat(result3.body).isEqualTo("OK3 30\n");
-        assertThat(result1.headers.contentType()).isEqualTo("text/plain; charset=UTF-8");
 
         final var request4 = TestRequest.empty().method("GET").path("companies/:id/products").plainTextBody("40");
         final var result4 = httpServer.send(request4);
-        assertThat(result4.contentType()).isEqualTo("plain/text");
         assertThat(result4.status).isEqualTo(200);
+        assertThat(result4.contentType()).isEqualTo("text/plain;charset=UTF-8");
         assertThat(result4.body).isEqualTo("OK4 40\n");
-        assertThat(result4.headers.contentType()).isEqualTo("text/plain; charset=UTF-8");
     }
 
     @Test
     void starts_testable_server2() throws IOException {
         final var httpServer = TestableHttpServer.empty()
                 .withPort(1000)
-                .withHandler(RouteHttpConnectionHandler.empty()
+                .withHandler(Router.empty()
                         .post("/test",new Authorized(new ComplexHandler("OK1"))))
                 .startTestHttpServer();
 
@@ -120,18 +116,16 @@ public class TestableHttpServerTest {
                 .header("Authorization", "Bearer stas-access-token")
                 .plainTextBody("10");
         final var result1 = httpServer.send(request1);
-        assertThat(result1.contentType()).isEqualTo("plain/text");
         assertThat(result1.status).isEqualTo(200);
+        assertThat(result1.contentType()).isEqualTo("text/plain;charset=UTF-8");
         assertThat(result1.body).isEqualTo("OK1 10 Stas\n");
-        assertThat(result1.headers.contentType()).isEqualTo("text/plain; charset=UTF-8");
 
         final var request2 = TestRequest.empty().method("POST").path("test")
                 .header("Authorization", "Bearer abcd1234")
                 .plainTextBody("10");
         final var result2 = httpServer.send(request2);
-        assertThat(result2.contentType()).isEqualTo("plain/text");
+        assertThat(result2.contentType()).isEqualTo("text/plain;charset=UTF-8");
         assertThat(result2.status).isEqualTo(200);
         assertThat(result2.body).isEqualTo("OK1 10 Anonymous\n");
-        assertThat(result2.headers.contentType()).isEqualTo("text/plain; charset=UTF-8");
     }
 }

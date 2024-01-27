@@ -1,6 +1,7 @@
 package testable_http_server;
 
 import com.sun.net.httpserver.HttpServer;
+import testable_http_server.http_connection_handlers.Router;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -17,7 +18,7 @@ public class TestableHttpServer {
     }
 
     public static TestableHttpServer empty() {
-        return new TestableHttpServer(80, RouteHttpConnectionHandler.empty());
+        return new TestableHttpServer(80, Router.empty());
     }
 
     public TestableHttpServer withPort(int newPort) {
