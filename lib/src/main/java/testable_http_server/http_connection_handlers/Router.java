@@ -3,6 +3,9 @@ package testable_http_server.http_connection_handlers;
 import testable_http_server.HttpConnectionHandler;
 import testable_http_server.PlainTextContent;
 import testable_http_server.Request;
+import testable_http_server.path.Path;
+import testable_http_server.path.Pattern;
+import testable_http_server.path.RawPattern;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,62 +37,65 @@ public class Router implements HttpConnectionHandler {
     }
 
     public Router get(String path, HttpConnectionHandler handler) {
-        return route(Method.GET, path, handler);
+        return route(Method.GET, new RawPattern(path).pattern(), handler);
     }
 
     public Router post(String path, HttpConnectionHandler handler) {
-        return route(Method.POST, path, handler);
+        return route(Method.POST, new RawPattern(path).pattern(), handler);
     }
 
-
-    public Router route(AcceptedMethod method, String path, HttpConnectionHandler handler) {
+    public Router route(AcceptedMethod method, Pattern path, HttpConnectionHandler handler) {
         final var handlers = new ArrayList<RouteHandler>(this.handlers);
         handlers.add(new RouteHandler(method, path, handler));
         return new Router(handlers);
     }
 
-    public Router route(Method method, String path, HttpConnectionHandler handler) {
+    public Router route(Method method, Pattern path, HttpConnectionHandler handler) {
         return route(new AcceptedMethod(Set.of(method)), path, handler);
     }
 
     public Router route(String path, Router handler) {
-        return route(AcceptedMethod.any(), path + "/*", handler);
+        final var rawPattern = new RawPattern(path + "/*");
+        return route(AcceptedMethod.any(), rawPattern.pattern(), handler);
     }
 
     private class RouteHandler implements HttpConnectionHandler {
 
         public final AcceptedMethod method;
-        public final String path;
+        public final Pattern path;
         public final HttpConnectionHandler handler;
 
-        public RouteHandler(AcceptedMethod method, String path, HttpConnectionHandler handler) {
+        public RouteHandler(AcceptedMethod method, Pattern path, HttpConnectionHandler handler) {
             this.method = method;
             this.path = path;
             this.handler = handler;
         }
 
         public boolean handles(Request request) {
-            if (path.endsWith("/*")) {
-                final var expectedPathBase = basePath(request) + path.replace("/*", "");
-                return method.includes(request.method()) &&
-                    request.uri().getPath().startsWith(expectedPathBase);
-            }
+            final var path = new Path(request.uri().getPath());
             return method.includes(request.method()) &&
-                    Objects.equals(request.uri().getPath(), basePath(request) + path);
+                    fullPattern(request).match(path);
         }
 
-        private String basePath(Request request) {
+        private Pattern fullPattern(Request request) {
+            return basePath(request).extend(path).pattern();
+        }
+
+        private RawPattern basePath(Request request) {
             if (request.hasAttribute(RoutePath.class)) {
                 final var routePath = request.attribute(RoutePath.class);
-                return routePath.path;
+                return new RawPattern(routePath.path);
             }
-            return "";
+            return RawPattern.blank();
         }
 
 
         public void handle(Request request) throws IOException {
-            final var newBasePath = basePath(request) + path.replace("/*", "");
-            final var requestInRoute = request.contextAttribute(new RoutePath(newBasePath));
+            final var newBasePath = fullPattern(request).withNoWildcardAtEnd().raw().toString();
+            final var params = fullPattern(request).extractParams(Path.fromUri(request.uri()));
+            final var requestInRoute = request
+                    .contextAttribute(new RoutePath(newBasePath))
+                    .contextAttribute(params);
             this.handler.handle(requestInRoute);
         }
     }

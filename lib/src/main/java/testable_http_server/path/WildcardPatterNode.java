@@ -10,6 +10,10 @@ public class WildcardPatterNode implements PatternNode {
     @Override
     public boolean stopHere() {
         return true;
+    }
 
+    @Override
+    public String toRawPatternString() {
+        return "*";
     }
 }

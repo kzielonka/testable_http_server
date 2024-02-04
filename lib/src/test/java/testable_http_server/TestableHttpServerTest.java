@@ -97,7 +97,7 @@ public class TestableHttpServerTest {
         assertThat(result3.contentType()).isEqualTo("text/plain;charset=UTF-8");
         assertThat(result3.body).isEqualTo("OK3 30\n");
 
-        final var request4 = TestRequest.empty().method("GET").path("companies/:id/products").plainTextBody("40");
+        final var request4 = TestRequest.empty().method("GET").path("companies/1234/products").plainTextBody("40");
         final var result4 = httpServer.send(request4);
         assertThat(result4.status).isEqualTo(200);
         assertThat(result4.contentType()).isEqualTo("text/plain;charset=UTF-8");

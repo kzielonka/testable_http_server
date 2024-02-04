@@ -34,6 +34,4 @@ abstract public class SimpleHttpConnectionHandler implements HttpConnectionHandl
         }
         throw new RuntimeException("no method defined");
     }
-
-    // public abstract void simpleHandler(Object... args) throws IOException;
 }

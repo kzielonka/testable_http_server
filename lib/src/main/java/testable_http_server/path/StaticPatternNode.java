@@ -12,4 +12,9 @@ public class StaticPatternNode implements PatternNode {
     public boolean match(PathNode node) {
         return name.equals(node.toString());
     }
+
+    @Override
+    public String toRawPatternString() {
+        return name;
+    }
 }

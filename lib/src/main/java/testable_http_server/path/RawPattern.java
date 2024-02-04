@@ -11,6 +11,18 @@ public class RawPattern {
         this.pattern = pattern;
     }
 
+    public String toString() {
+        return pattern;
+    }
+
+    public static RawPattern blank() {
+        return new RawPattern("");
+    }
+
+    public RawPattern extend(Pattern pattern) {
+        return new RawPattern(this.pattern + pattern.raw().toString());
+    }
+
     public Pattern pattern() {
         final List<? extends PatternNode> nodes = Arrays.stream(pattern.split("/"))
                 .map(text -> parseRawPatternNode(text)).toList();
@@ -22,7 +34,7 @@ public class RawPattern {
             return new WildcardPatterNode();
         }
         if (rawPatterNode.startsWith(":")) {
-            return new ParamPatternNode();
+            return new ParamPatternNode(rawPatterNode.replaceFirst("^:", ""));
         }
         return new StaticPatternNode(rawPatterNode);
     }
